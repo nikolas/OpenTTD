@@ -705,6 +705,7 @@ static const char * const _name_spanish_real[] = {
 	"Tocopilla",
 	"Mendoza",
 	"Santa Rosa",
+	"Puerto Vallarta",
 };
 
 static const char * const _name_french_real[] = {
@@ -778,6 +779,21 @@ static const char * const _name_french_real[] = {
 	"Chamonix",
 	"Angoul\xC3\xA8me",
 	"Alen\xC3\xA7on",
+	/*"Strasbourg",
+	"Reims",
+	"Le Havre",
+	"Saint-\xC3\x89tienne",
+	"Dijon",
+	"Villeurbanne",
+	"Saint-Denis",
+	"Aix-en-Provence",
+	"Clermont-Ferrand",
+	"Brest",
+	"Limoges",
+	"Amiens",
+	"Perpignan",
+	"Besan\xC3\xA7on",*/
+
 };
 
 static const char * const _name_silly_1[] = {

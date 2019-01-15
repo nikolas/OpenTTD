@@ -61,6 +61,7 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 	uint32 townnamegrfid;
 	uint16 townnametype;
 	uint32 townnameparts;
+	char *townname;                ///< Default town name.
 	char *name;                    ///< Custom town name. If NULL, the town was not renamed and uses the generated name.
 
 	byte flags;                    ///< See #TownFlags.

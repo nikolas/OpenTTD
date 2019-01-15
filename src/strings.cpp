@@ -1431,6 +1431,10 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 					int64 args_array[] = {(int64)(size_t)t->name};
 					StringParameters tmp_params(args_array);
 					buff = GetStringWithArgs(buff, STR_JUST_RAW_STRING, &tmp_params, last);
+				} else if (t->townname != NULL) {
+					int64 args_array[] = {(int64)(size_t)t->townname};
+					StringParameters tmp_params(args_array);
+					buff = GetStringWithArgs(buff, STR_JUST_RAW_STRING, &tmp_params, last);
 				} else {
 					buff = GetTownName(buff, t, last);
 				}

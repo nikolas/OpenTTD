@@ -17,7 +17,8 @@
 char *GenerateTownNameString(char *buf, const char *last, size_t lang, uint32 seed);
 char *GetTownName(char *buff, const TownNameParams *par, uint32 townnameparts, const char *last);
 char *GetTownName(char *buff, const Town *t, const char *last);
-bool VerifyTownName(uint32 r, const TownNameParams *par, TownNames *town_names = NULL);
+bool VerifyTownName(char *name, TownNames *town_names = NULL);
+bool GenerateTownName(char *buf1, const char *last, TownNames *town_names = NULL);
 bool GenerateTownName(uint32 *townnameparts, TownNames *town_names = NULL);
 
 #endif /* TOWNNAME_FUNC_H */

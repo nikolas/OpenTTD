@@ -182,7 +182,7 @@ enum TownGrowthResult {
 };
 
 static bool BuildTownHouse(Town *t, TileIndex tile);
-static Town *CreateRandomTown(uint attempts, uint32 townnameparts, TownSize size, bool city, TownLayout layout);
+static Town *CreateRandomTown(uint attempts, char *townname, TownSize size, bool city, TownLayout layout);
 
 static void TownDrawHouseLift(const TileInfo *ti)
 {
@@ -1583,13 +1583,13 @@ static void UpdateTownGrowth(Town *t);
  *
  * @param t The town
  * @param tile Where to put it
- * @param townnameparts The town name
+ * @param townname The town name
  * @param size Parameter for size determination
  * @param city whether to build a city or town
  * @param layout the (road) layout of the town
  * @param manual was the town placed manually?
  */
-static void DoCreateTown(Town *t, TileIndex tile, uint32 townnameparts, TownSize size, bool city, TownLayout layout, bool manual)
+static void DoCreateTown(Town *t, TileIndex tile, char *townname, TownSize size, bool city, TownLayout layout, bool manual)
 {
 	t->xy = tile;
 	t->cache.num_houses = 0;
@@ -1633,7 +1633,7 @@ static void DoCreateTown(Town *t, TileIndex tile, uint32 townnameparts, TownSize
 		t->townnamegrfid = GetGRFTownNameId(_settings_game.game_creation.town_name  - _nb_orig_names);
 		t->townnametype  = GetGRFTownNameType(_settings_game.game_creation.town_name - _nb_orig_names);
 	}
-	t->townnameparts = townnameparts;
+	t->townname = stredup(townname);
 
 	t->UpdateVirtCoord();
 	InvalidateWindowData(WC_TOWN_DIRECTORY, 0, 0);
@@ -1698,6 +1698,7 @@ static bool IsUniqueTownName(const char *name)
 
 	FOR_ALL_TOWNS(t) {
 		if (t->name != NULL && strcmp(t->name, name) == 0) return false;
+		if (t->townname != NULL && strcmp(t->townname, name) == 0) return false;
 	}
 
 	return true;
@@ -1722,7 +1723,7 @@ CommandCost CmdFoundTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 	TownLayout layout = Extract<TownLayout, 3, 3>(p1);
 	TownNameParams par(_settings_game.game_creation.town_name);
 	bool random = HasBit(p1, 6);
-	uint32 townnameparts = p2;
+	char townname[(MAX_LENGTH_TOWN_NAME_CHARS + 1) * MAX_CHAR_LENGTH];
 
 	if (size >= TSZ_END) return CMD_ERROR;
 	if (layout >= NUM_TLS) return CMD_ERROR;
@@ -1742,7 +1743,8 @@ CommandCost CmdFoundTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 
 	if (StrEmpty(text)) {
 		/* If supplied name is empty, townnameparts has to generate unique automatic name */
-		if (!VerifyTownName(townnameparts, &par)) return_cmd_error(STR_ERROR_NAME_MUST_BE_UNIQUE);
+		GetTownName(townname, &par, p2, lastof(townname));
+		if (!VerifyTownName(townname)) return_cmd_error(STR_ERROR_NAME_MUST_BE_UNIQUE);
 	} else {
 		/* If name is not empty, it has to be unique custom name */
 		if (Utf8StringLength(text) >= MAX_LENGTH_TOWN_NAME_CHARS) return CMD_ERROR;
@@ -1777,7 +1779,7 @@ CommandCost CmdFoundTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 		UpdateNearestTownForRoadTiles(true);
 		Town *t;
 		if (random) {
-			t = CreateRandomTown(20, townnameparts, size, city, layout);
+			t = CreateRandomTown(20, townname, size, city, layout);
 			if (t == NULL) {
 				cost = CommandCost(STR_ERROR_NO_SPACE_FOR_TOWN);
 			} else {
@@ -1785,7 +1787,7 @@ CommandCost CmdFoundTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 			}
 		} else {
 			t = new Town(tile);
-			DoCreateTown(t, tile, townnameparts, size, city, layout, true);
+			DoCreateTown(t, tile, townname, size, city, layout, true);
 		}
 		UpdateNearestTownForRoadTiles(false);
 		old_generating_world.Restore();
@@ -1934,7 +1936,7 @@ static TileIndex FindNearestGoodCoastalTownSpot(TileIndex tile, TownLayout layou
 	return INVALID_TILE;
 }
 
-static Town *CreateRandomTown(uint attempts, uint32 townnameparts, TownSize size, bool city, TownLayout layout)
+static Town *CreateRandomTown(uint attempts, char *townname, TownSize size, bool city, TownLayout layout)
 {
 	assert(_game_mode == GM_EDITOR || _generating_world); // These are the preconditions for CMD_DELETE_TOWN
 
@@ -1957,7 +1959,7 @@ static Town *CreateRandomTown(uint attempts, uint32 townnameparts, TownSize size
 		/* Allocate a town struct */
 		Town *t = new Town(tile);
 
-		DoCreateTown(t, tile, townnameparts, size, city, layout, false);
+		DoCreateTown(t, tile, townname, size, city, layout, false);
 
 		/* if the population is still 0 at the point, then the
 		 * placement is so bad it couldn't grow at all */
@@ -1993,7 +1995,7 @@ bool GenerateTowns(TownLayout layout)
 	uint difficulty = (_game_mode != GM_EDITOR) ? _settings_game.difficulty.number_towns : 0;
 	uint total = (difficulty == (uint)CUSTOM_TOWN_NUMBER_DIFFICULTY) ? _settings_game.game_creation.custom_town_number : ScaleByMapSize(_num_initial_towns[difficulty] + (Random() & 7));
 	total = min(TownPool::MAX_SIZE, total);
-	uint32 townnameparts;
+	char townname[(MAX_LENGTH_TOWN_NAME_CHARS + 1) * MAX_CHAR_LENGTH];
 	TownNames town_names;
 
 	SetGeneratingWorldProgress(GWP_TOWN, total);
@@ -2004,10 +2006,12 @@ bool GenerateTowns(TownLayout layout)
 	do {
 		bool city = (_settings_game.economy.larger_towns != 0 && Chance16(1, _settings_game.economy.larger_towns));
 		IncreaseGeneratingWorldProgress(GWP_TOWN);
+
 		/* Get a unique name for the town. */
-		if (!GenerateTownName(&townnameparts, &town_names)) continue;
+		if (!GenerateTownName(townname, lastof(townname), &town_names)) continue;
+
 		/* try 20 times to create a random-sized town for the first loop. */
-		if (CreateRandomTown(20, townnameparts, TSZ_RANDOM, city, layout) != NULL) current_number++; // If creation was successful, raise a flag.
+		if (CreateRandomTown(20, townname, TSZ_RANDOM, city, layout) != NULL) current_number++; // If creation was successful, raise a flag.
 	} while (--total);
 
 	town_names.clear();
@@ -2016,8 +2020,8 @@ bool GenerateTowns(TownLayout layout)
 
 	/* If current_number is still zero at this point, it means that not a single town has been created.
 	 * So give it a last try, but now more aggressive */
-	if (GenerateTownName(&townnameparts) &&
-			CreateRandomTown(10000, townnameparts, TSZ_RANDOM, _settings_game.economy.larger_towns != 0, layout) != NULL) {
+	if (GenerateTownName(townname, lastof(townname)) &&
+			CreateRandomTown(10000, townname, TSZ_RANDOM, _settings_game.economy.larger_towns != 0, layout) != NULL) {
 		return true;
 	}
 

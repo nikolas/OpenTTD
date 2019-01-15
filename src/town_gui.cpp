@@ -1056,7 +1056,9 @@ private:
 	bool city;              ///< Are we building a city?
 	QueryString townname_editbox; ///< Townname editbox
 	bool townnamevalid;     ///< Is generated town name valid?
-	uint32 townnameparts;   ///< Generated town name
+	uint32 townnameparts;
+	/// Generated town name
+	char townname[(MAX_LENGTH_TOWN_NAME_CHARS + 1) * MAX_CHAR_LENGTH];
 	TownNameParams params;  ///< Town name parameters
 
 public:
@@ -1075,12 +1077,15 @@ public:
 
 	void RandomTownName()
 	{
-		this->townnamevalid = GenerateTownName(&this->townnameparts);
+		this->townnamevalid =
+			GenerateTownName(this->townname, lastof(this->townname));
 
 		if (!this->townnamevalid) {
 			this->townname_editbox.text.DeleteAll();
 		} else {
-			GetTownName(this->townname_editbox.text.buf, &this->params, this->townnameparts, &this->townname_editbox.text.buf[this->townname_editbox.text.max_bytes - 1]);
+			strecpy(this->townname_editbox.text.buf,
+					this->townname,
+					&this->townname_editbox.text.buf[this->townname_editbox.text.max_bytes - 1]);
 			this->townname_editbox.text.UpdateSize();
 		}
 		UpdateOSKOriginalText(this, WID_TF_TOWN_NAME_EDITBOX);
@@ -1119,7 +1124,7 @@ public:
 		} else {
 			/* If user changed the name, send it */
 			char buf[MAX_LENGTH_TOWN_NAME_CHARS * MAX_CHAR_LENGTH];
-			GetTownName(buf, &this->params, this->townnameparts, lastof(buf));
+			strecpy(buf, this->townname, lastof(buf));
 			if (strcmp(buf, this->townname_editbox.text.buf) != 0) name = this->townname_editbox.text.buf;
 		}
 

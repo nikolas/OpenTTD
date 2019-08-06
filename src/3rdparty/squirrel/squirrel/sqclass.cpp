@@ -1,7 +1,6 @@
 /*
- * see copyright notice in squirrel.h
- */
-
+	see copyright notice in squirrel.h
+*/
 #include "../../../stdafx.h"
 
 #include "sqpcheader.h"
@@ -9,8 +8,6 @@
 #include "sqtable.h"
 #include "sqclass.h"
 #include "sqclosure.h"
-
-#include "../../../safeguards.h"
 
 SQClass::SQClass(SQSharedState *ss,SQClass *base)
 {
@@ -32,7 +29,7 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 	ADD_TO_CHAIN(&_sharedstate->_gc_chain, this);
 }
 
-void SQClass::Finalize() {
+void SQClass::Finalize() { 
 	_attributes = _null_;
 	_defaultvalues.resize(0);
 	_methods.resize(0);
@@ -52,7 +49,7 @@ SQClass::~SQClass()
 bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
 {
 	SQObjectPtr temp;
-	if(_locked)
+	if(_locked) 
 		return false; //the class already has an instance so cannot be modified
 	if(_members->Get(key,temp) && _isfield(temp)) //overrides the default value
 	{
@@ -61,10 +58,10 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	}
 	if(type(val) == OT_CLOSURE || type(val) == OT_NATIVECLOSURE || bstatic) {
 		SQInteger mmidx;
-		if((type(val) == OT_CLOSURE || type(val) == OT_NATIVECLOSURE) &&
+		if((type(val) == OT_CLOSURE || type(val) == OT_NATIVECLOSURE) && 
 			(mmidx = ss->GetMetaMethodIdxByName(key)) != -1) {
 			_metamethods[mmidx] = val;
-		}
+		} 
 		else {
 			if(type(temp) == OT_NULL) {
 				SQClassMember m;
@@ -163,7 +160,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, SQInteger memsize)
 	Init(ss);
 }
 
-void SQInstance::Finalize()
+void SQInstance::Finalize() 
 {
 	SQUnsignedInteger nvalues = _class->_defaultvalues.size();
 	__ObjRelease(_class);

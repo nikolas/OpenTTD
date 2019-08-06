@@ -509,7 +509,7 @@ bool _sort_compare(HSQUIRRELVM v,SQObjectPtr &a,SQObjectPtr &b,SQInteger func,SQ
 		sq_pushroottable(v);
 		v->Push(a);
 		v->Push(b);
-		if(SQ_FAILED(sq_call(v, 3, SQTrue, SQFalse))) {
+		if(SQ_FAILED(sq_call(v, 3, SQTrue, SQFalse, SQFalse))) {
 			if(!sq_isstring( v->_lasterror))
 				v->Raise_Error("compare func failed");
 			return false;
@@ -554,7 +554,7 @@ bool _hsort_sift_down(HSQUIRRELVM v,SQArray *arr, SQInteger root, SQInteger bott
 				v->Raise_Error("inconsistent compare function");
 				return false; // We'd be swapping ourselve. The compare function is incorrect
 			}
-			_Swap(arr->_values[root],arr->_values[maxChild]);
+			//_Swap(arr->_values[root],arr->_values[maxChild]);
 			root = maxChild;
 		}
 		else {
@@ -575,7 +575,7 @@ bool _hsort(HSQUIRRELVM v,SQObjectPtr &arr, SQInteger l, SQInteger r,SQInteger f
 
 	for (i = array_size-1; i >= 1; i--)
 	{
-		_Swap(a->_values[0],a->_values[i]);
+		//_Swap(a->_values[0],a->_values[i]);
 		if(!_hsort_sift_down(v,a, 0, i-1,func)) return false;
 	}
 	return true;
@@ -709,12 +709,12 @@ SQRegFunction SQSharedState::_number_default_delegate_funcz[]={
 //CLOSURE DEFAULT DELEGATE//////////////////////////
 static SQInteger closure_pcall(HSQUIRRELVM v)
 {
-	return SQ_SUCCEEDED(sq_call(v,sq_gettop(v)-1,SQTrue,SQFalse))?1:SQ_ERROR;
+	return SQ_SUCCEEDED(sq_call(v,sq_gettop(v)-1,SQTrue,SQFalse,SQFalse))?1:SQ_ERROR;
 }
 
 static SQInteger closure_call(HSQUIRRELVM v)
 {
-	return SQ_SUCCEEDED(sq_call(v,sq_gettop(v)-1,SQTrue,SQTrue))?1:SQ_ERROR;
+	return SQ_SUCCEEDED(sq_call(v,sq_gettop(v)-1,SQTrue,SQTrue,SQFalse))?1:SQ_ERROR;
 }
 
 static SQInteger _closure_acall(HSQUIRRELVM v,SQBool raiseerror)
@@ -723,7 +723,7 @@ static SQInteger _closure_acall(HSQUIRRELVM v,SQBool raiseerror)
 	SQInteger nparams=aparams->Size();
 	v->Push(stack_get(v,1));
 	for(SQInteger i=0;i<nparams;i++)v->Push(aparams->_values[i]);
-	return SQ_SUCCEEDED(sq_call(v,nparams,SQTrue,raiseerror))?1:SQ_ERROR;
+	return SQ_SUCCEEDED(sq_call(v,nparams,SQTrue,raiseerror,SQFalse))?1:SQ_ERROR;
 }
 
 static SQInteger closure_acall(HSQUIRRELVM v)
@@ -824,7 +824,7 @@ static SQInteger thread_call(HSQUIRRELVM v)
 		_thread(o)->Push(_thread(o)->_roottable);
 		for(SQInteger i = 2; i<(nparams+1); i++)
 			sq_move(_thread(o),v,i);
-		if(SQ_SUCCEEDED(sq_call(_thread(o),nparams,SQTrue,SQFalse))) {
+		if(SQ_SUCCEEDED(sq_call(_thread(o),nparams,SQTrue,SQFalse,SQFalse))) {
 			sq_move(v,_thread(o),-1);
 			sq_pop(_thread(o),1);
 			return 1;

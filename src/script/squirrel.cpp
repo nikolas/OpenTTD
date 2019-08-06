@@ -516,14 +516,16 @@ public:
 	}
 };
 
-static WChar _io_file_lexfeed_ASCII(SQUserPointer file)
+static SQInteger _io_file_lexfeed_ASCII(SQUserPointer file)
 {
 	unsigned char c;
-	if (((SQFile *)file)->Read(&c, sizeof(c), 1) > 0) return c;
+	if (((SQFile *)file)->Read(&c, sizeof(c), 1) > 0) {
+		return static_cast<SQInteger>(c);
+	}
 	return 0;
 }
 
-static WChar _io_file_lexfeed_UTF8(SQUserPointer file)
+static SQInteger _io_file_lexfeed_UTF8(SQUserPointer file)
 {
 	char buffer[5];
 
@@ -537,24 +539,26 @@ static WChar _io_file_lexfeed_UTF8(SQUserPointer file)
 
 	/* Convert the character, and when definitely invalid, bail out as well. */
 	WChar c;
-	if (Utf8Decode(&c, buffer) != len) return -1;
+	if (Utf8Decode(&c, buffer) != len) {
+		return -1;
+	}
 
-	return c;
+	return static_cast<SQInteger>(c);
 }
 
-static WChar _io_file_lexfeed_UCS2_no_swap(SQUserPointer file)
+static SQInteger _io_file_lexfeed_UCS2_no_swap(SQUserPointer file)
 {
 	unsigned short c;
-	if (((SQFile *)file)->Read(&c, sizeof(c), 1) > 0) return (WChar)c;
+	if (((SQFile *)file)->Read(&c, sizeof(c), 1) > 0) return static_cast<SQInteger>(c);
 	return 0;
 }
 
-static WChar _io_file_lexfeed_UCS2_swap(SQUserPointer file)
+static SQInteger _io_file_lexfeed_UCS2_swap(SQUserPointer file)
 {
 	unsigned short c;
 	if (((SQFile *)file)->Read(&c, sizeof(c), 1) > 0) {
 		c = ((c >> 8) & 0x00FF)| ((c << 8) & 0xFF00);
-		return (WChar)c;
+		return static_cast<SQInteger>(c);
 	}
 	return 0;
 }

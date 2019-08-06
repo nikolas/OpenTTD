@@ -1450,7 +1450,7 @@ bool SQVM::DeleteSlot(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr
 					_table(self)->Remove(key);
 				}
 				else {
-					Raise_IdxError((const SQObject &)key);
+					Raise_IdxError((SQObject &)key);
 					return false;
 				}
 			}

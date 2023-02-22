@@ -224,6 +224,21 @@ include_directories(${CMAKE_SOURCE_DIR}/src/3rdparty/squirrel/include)
 
 include(MSVCFilters)
 
+if(TEST)
+  Include(FetchContent)
+
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.3.1
+  )
+
+  FetchContent_MakeAvailable(Catch2)
+
+  add_executable(tests test.cpp)
+  target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+endif()
+
 add_executable(openttd WIN32 ${GENERATED_SOURCE_FILES})
 set_target_properties(openttd PROPERTIES OUTPUT_NAME "${BINARY_NAME}")
 # All other files are added via target_sources()
